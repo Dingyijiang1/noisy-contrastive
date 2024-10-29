@@ -312,6 +312,16 @@ def main():
         print("Test\tEpoch:{}/{}\t time: {}\tAcc: {}".format(epoch, args.epochs, time.time()-time0, val_top1_acc))
         best_acc = max(best_acc, val_top1_acc)
 
+        # Save checkpoint every 100 epochs
+        if (epoch + 1) % 50 == 0:
+            checkpoint_path = f'./checkpoint/checkpoint_epoch_{epoch + 1}.pth'
+            torch.save({
+                'epoch': epoch + 1,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'best_acc': best_acc,
+            }, checkpoint_path)
+            print(f"Checkpoint saved at epoch {epoch + 1} to {checkpoint_path}")
         # scheduler.step()
 
 
