@@ -7,7 +7,7 @@ import torchvision
 from torchvision import transforms
 from PIL import Image
 import torchvision.datasets
-
+from torchvision.datasets import CIFAR10, CIFAR100
 
 def corrupted_labels(targets, r=0.4, noise_type='sym'):
     transition = {0: 0, 2: 0, 4: 7, 7: 7, 1: 1, 9: 1, 3: 5, 5: 3, 6: 6, 8: 8}  # class transition for asymmetric noise
@@ -27,16 +27,15 @@ def corrupted_labels(targets, r=0.4, noise_type='sym'):
     return np.array(noisy_label)
 
 
-class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):
+class IMB_CIFAR10_LT(CIFAR10):
     cls_num = 10
 
-    def __init__(self, root, imb_type='exp', imb_factor=0.01, rand_number=0, noise_type='sym', noise_ratio=0.4, train=True,
-                 transform=None, target_transform=None, download=False):
-        super(IMBALANCECIFAR10, self).__init__(root, train, transform, target_transform, download)
-        np.random.seed(rand_number)
+    def __init__(self, root, transform, imb_type='exp', imb_factor=0.01, noise_type, r):
+        super(IMB_CIFAR10_LT, self).__init__(root, download=True)
+        np.random.seed(3407)
         img_num_list = self.get_img_num_per_cls(self.cls_num, imb_type, imb_factor)
         self.gen_imbalanced_data(img_num_list)
-        self.noise_targets = corrupted_labels(self.targets, r=noise_ratio, noise_type=noise_type)
+        self.noise_targets = corrupted_labels(self.targets, r, noise_type)
 
     def get_img_num_per_cls(self, cls_num, imb_type, imb_factor):
         img_max = len(self.data) / cls_num
@@ -84,39 +83,3 @@ class IMBALANCECIFAR10(torchvision.datasets.CIFAR10):
         return img, target, true_target, index
 
 
-class CIFAR10_LT(object):
-    def __init__(self, distributed, root='./data/cifar10', imb_type='exp', imb_factor=0.01, noise_type='sym',
-                 noise_ratio=0.4, batch_size=128, num_works=40):
-        train_transform = transforms.Compose([
-            transforms.RandomCrop(32, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
-
-        eval_transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-        ])
-
-        train_dataset = IMBALANCECIFAR10(root=root, imb_type=imb_type, imb_factor=imb_factor, noise_type=noise_type,
-                                         noise_ratio=noise_ratio, rand_number=0, train=True, download=True, transform=train_transform)
-        eval_dataset = torchvision.datasets.CIFAR10(root=root, train=False, download=True, transform=eval_transform)
-
-        self.cls_num_list = train_dataset.get_cls_num_list()
-        self.dist_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if distributed else None
-        self.train_instance = torch.utils.data.DataLoader(
-            train_dataset,
-            batch_size=batch_size, shuffle=True,
-            num_workers=num_works, pin_memory=True, sampler=self.dist_sampler)
-
-        balance_sampler = ClassAwareSampler(train_dataset)
-        self.train_balance = torch.utils.data.DataLoader(
-            train_dataset,
-            batch_size=batch_size, shuffle=False,
-            num_workers=num_works, pin_memory=True, sampler=balance_sampler)
-
-        self.eval = torch.utils.data.DataLoader(
-            eval_dataset,
-            batch_size=batch_size, shuffle=False,
-            num_workers=num_works, pin_memory=True)
