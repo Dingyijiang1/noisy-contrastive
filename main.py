@@ -28,6 +28,8 @@ parser.add_argument('--noise_type', default='sym', type=str, help='noise type: s
 parser.add_argument('--r', type=float, default=0.8, help='noise level')
 parser.add_argument('--trial', type=str, default='1', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
+parser.add_argument('--imb_type', default='exp', type=str, help='imbalance type')
+parser.add_argument('--imb_factor', default='10', type=str, help='imbalance factor')
 
 parser.add_argument('--arch', default='resnet18', help='model name is used for training')
 parser.add_argument('--batch_size', type=int, default=256, help='batch_size')
@@ -110,6 +112,8 @@ def set_loader(args):
 
         train_set = CIFAR10N(root=args.data_root,
                              transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
+                             imb_type = args.imb_type,
+                             imb_factor = args.imb_factor,
                              noise_type=args.noise_type,
                              r=args.r)
 
