@@ -30,7 +30,7 @@ def corrupted_labels(targets, r=0.4, noise_type='sym'):
 class IMB_CIFAR10_LT(CIFAR10):
     cls_num = 10
 
-    def __init__(self, root, transform, imb_type='exp', imb_factor=0.01, noise_type, r):
+    def __init__(self, root, transform, imb_type='exp', imb_factor=0.01, noise_type='sym', r=0.4):
         super(IMB_CIFAR10_LT, self).__init__(root, download=True)
         np.random.seed(3407)
         img_num_list = self.get_img_num_per_cls(self.cls_num, imb_type, imb_factor)
