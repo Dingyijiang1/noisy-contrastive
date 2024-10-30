@@ -16,7 +16,7 @@ import torch.nn as nn
 from simsiam.model_factory import SimSiam
 
 
-from loader import IMB_CIFAR10_LT
+from LT_loader import IMB_CIFAR10_LT
 from utils import adjust_learning_rate, AverageMeter, ProgressMeter, save_checkpoint, accuracy, load_checkpoint, ThreeCropsTransform
 
 
