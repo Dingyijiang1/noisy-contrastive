@@ -1,6 +1,5 @@
 import numpy as np
 import random
-from .sampler import ClassAwareSampler
 
 import torch
 import torchvision
