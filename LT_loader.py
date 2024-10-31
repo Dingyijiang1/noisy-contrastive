@@ -80,8 +80,10 @@ class IMB_CIFAR10_LT(CIFAR10):
     def __getitem__(self, index):
         img, target, true_target = self.data[index], self.noise_targets[index], self.targets[index]
         img = self.data[index]
+        
         img = Image.fromarray(img)
-        img = self.transform(img) if self.transform else img
-        return img, target, true_target, index
+        
+        img1 = self.transform(img)
+        return img1, target, true_target, index
 
 
