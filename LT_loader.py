@@ -42,8 +42,6 @@ class IMB_CIFAR10_LT(CIFAR10):
         img_num_per_cls = []
         if imb_type == 'exp':
             for cls_idx in range(cls_num):
-                print("(cls_idx / (cls_num - 1.0))", type((cls_idx / (cls_num - 1.0))))
-                print("imb_factor", type(imb_factor))
                 num = img_max * (imb_factor ** (cls_idx / (cls_num - 1.0)))
                 img_num_per_cls.append(int(num))
         elif imb_type == 'step':
