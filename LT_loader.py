@@ -25,6 +25,23 @@ def corrupted_labels(targets, r=0.4, noise_type='sym'):
             noisy_label.append(targets[i])
     return np.array(noisy_label)
 
+class CIFAR10N(CIFAR10):
+    """CIFAR10 Dataset.
+    """
+    def __init__(self, root, transform, noise_type, r):
+        super(CIFAR10N, self).__init__(root, download=True)
+        self.noise_targets = corrupted_labels(self.targets, r, noise_type)
+        self.transform=transform
+
+    def __getitem__(self, index):
+        img, target, true_target = self.data[index], self.noise_targets[index], self.targets[index]
+        img = self.data[index]
+        img = Image.fromarray(img)
+
+        im_1 = self.transform(img)
+
+        return im_1, target, true_target, index
+
 
 class IMB_CIFAR10_LT(CIFAR10):
     cls_num = 10
