@@ -111,10 +111,16 @@ def set_loader(args):
             transforms.ToTensor(),
             transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])])
 
-        train_set = IMB_CIFAR10_LT(root=args.data_root,
+        if args.imb :
+            train_set = IMB_CIFAR10_LT(root=args.data_root,
+                                 transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
+                                 imb_type = args.imb_type,
+                                 imb_factor = args.imb_factor,
+                                 noise_type=args.noise_type,
+                                 r=args.r)
+        else: 
+            train_set = CIFAR10N(root=args.data_root,
                              transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
-                             imb_type = args.imb_type,
-                             imb_factor = args.imb_factor,
                              noise_type=args.noise_type,
                              r=args.r)
 
@@ -136,6 +142,7 @@ def set_loader(args):
 
         test_loader = DataLoader(test_data, batch_size=128, shuffle=False, num_workers=args.num_workers,
                                  pin_memory=True)
+        
     elif args.dataset == 'cifar100':
         train_transforms = transforms.Compose([
             transforms.RandomResizedCrop(args.img_dim, scale=(0.2, 1.)),
