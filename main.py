@@ -16,7 +16,7 @@ import torch.nn as nn
 from simsiam.model_factory import SimSiam
 
 
-from LT_loader import IMB_CIFAR10_LT
+from LT_loader import IMB_CIFAR10_LT, CIFAR10N
 from utils import adjust_learning_rate, AverageMeter, ProgressMeter, save_checkpoint, accuracy, load_checkpoint, ThreeCropsTransform
 
 
@@ -28,6 +28,7 @@ parser.add_argument('--noise_type', default='sym', type=str, help='noise type: s
 parser.add_argument('--r', type=float, default=0.8, help='noise level')
 parser.add_argument('--trial', type=str, default='1', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
+parser.add_argument('--imb', default=False, type=bool, help='imbalance or not')
 parser.add_argument('--imb_type', default='exp', type=str, help='imbalance type')
 parser.add_argument('--imb_factor', default='10', type=float, help='imbalance factor')
 
