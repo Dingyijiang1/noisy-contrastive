@@ -112,7 +112,7 @@ def set_loader(args):
             transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])])
 
         if args.imb :
-            train_set = CIFAR10_imb(root=args.data_root,
+            train_set = CIFAR10N_imb(root=args.data_root,
                                  transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
                                  imb_type = args.imb_type,
                                  imb_factor = args.imb_factor,
