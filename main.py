@@ -16,7 +16,7 @@ import torch.nn as nn
 from simsiam.model_factory import SimSiam
 
 
-from LT_loader import IMB_CIFAR10_LT, CIFAR10N
+from loader_LT import CIFAR10N_imb, CIFAR10N
 from utils import adjust_learning_rate, AverageMeter, ProgressMeter, save_checkpoint, accuracy, load_checkpoint, ThreeCropsTransform
 
 
@@ -112,7 +112,7 @@ def set_loader(args):
             transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])])
 
         if args.imb :
-            train_set = IMB_CIFAR10_LT(root=args.data_root,
+            train_set = CIFAR10_imb(root=args.data_root,
                                  transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
                                  imb_type = args.imb_type,
                                  imb_factor = args.imb_factor,
