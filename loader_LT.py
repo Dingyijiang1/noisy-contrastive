@@ -269,11 +269,11 @@ class CIFAR10N(CIFAR10):
 
         return im_1, target, true_target, index
       
-class CIFAR10N_imb(CIFAR10):
+class CIFAR10N_imb(Cifar10):
     """CIFAR-10 Dataset with noise and imbalance."""
     
     def __init__(self, root, transform, noise_type, r, imb_type='exp', imb_factor=0.1, rand_number=0):
-        super(CIFAR10N, self).__init__(root, download=True)
+        super(CIFAR10N_imb, self).__init__(root, download=True)
         self.transform = transform
 
         self.config = Cifar10LTConfig(imb_type=imb_type, imb_factor=imb_factor, rand_number=rand_number)
