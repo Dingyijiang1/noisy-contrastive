@@ -16,7 +16,7 @@ import torch.nn as nn
 from simsiam.model_factory import SimSiam
 
 
-from loader_LT import CIFAR10N_imb, CIFAR10N
+from loader_LT import Cifar10Imbanlance, CIFAR10N
 from utils import adjust_learning_rate, AverageMeter, ProgressMeter, save_checkpoint, accuracy, load_checkpoint, ThreeCropsTransform
 
 
@@ -29,8 +29,7 @@ parser.add_argument('--r', type=float, default=0.8, help='noise level')
 parser.add_argument('--trial', type=str, default='1', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 parser.add_argument('--imb', default=False, type=bool, help='imbalance or not')
-parser.add_argument('--imb_type', default='exp', type=str, help='imbalance type')
-parser.add_argument('--imb_factor', default='10', type=float, help='imbalance factor')
+parser.add_argument('--imbanlance_rate', default='0.1', type=float, help='imbalance rate')
 
 parser.add_argument('--arch', default='resnet18', help='model name is used for training')
 parser.add_argument('--batch_size', type=int, default=256, help='batch_size')
@@ -112,12 +111,10 @@ def set_loader(args):
             transforms.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])])
 
         if args.imb :
-            train_set = CIFAR10N_imb(root=args.data_root,
+            train_set = Cifar10Imbanlance(file_path=args.data_root,
                                  transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
-                                 imb_type = args.imb_type,
-                                 imb_factor = args.imb_factor,
-                                 noise_type=args.noise_type,
-                                 r=args.r)
+                                 imbanlance_rate = args.imb_factor,
+                                 )
         else: 
             train_set = CIFAR10N(root=args.data_root,
                              transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
