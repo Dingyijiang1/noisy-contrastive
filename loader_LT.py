@@ -71,7 +71,7 @@ class Cifar10Imbanlance(Dataset):
         x = Image.fromarray(x)
         if self.transform is not None:
             x = self.transform(x)
-        return x, y
+        return x, y, y, item
 
     def get_per_class_num(self):
         return self.class_list
