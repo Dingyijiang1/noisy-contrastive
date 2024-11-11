@@ -113,7 +113,7 @@ def set_loader(args):
         if args.imb :
             train_set = Cifar10Imbanlance(file_path=args.data_root,
                                  transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
-                                 imbanlance_rate = args.imb_factor,
+                                 imbanlance_rate = args.imbanlance_rate,
                                  )
         else: 
             train_set = CIFAR10N(root=args.data_root,
