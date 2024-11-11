@@ -1,243 +1,21 @@
 import numpy as np
 import json
+import os
 import torch
 import sys
 import torchvision
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
+from PIL import Image
 from torchvision.datasets import CIFAR10, CIFAR100
 import math
 import random
-from PIL import Image
-from typing import List, Dict, Tuple
 
-import pickle
-from typing import Dict, Iterator, List, Tuple, BinaryIO
-
-import numpy as np
-
-import datasets
-from datasets.tasks import ImageClassification
-
-_DATA_URL = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-
-_NAMES = [
-    "airplane",
-    "automobile",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck",
-]
-
-
-class Cifar10LTConfig(datasets.BuilderConfig):
-    """BuilderConfig for CIFAR-10-LT."""
-
-    def __init__(self, imb_type: str, imb_factor: float, rand_number: int = 0, cls_num: int = 10, **kwargs):
-        """BuilderConfig for CIFAR-10-LT.
-        Args:
-            imb_type (str): imbalance type, including 'exp', 'step'.
-            imb_factor (float): imbalance factor.
-            rand_number (int): random seed, default: 0.
-            cls_num (int): number of classes, default: 10.
-            **kwargs: keyword arguments forwarded to super.
-        """
-        # Version history:
-        super().__init__(version=datasets.Version("1.0.0"), **kwargs)
-        self.imb_type = imb_type
-        self.imb_factor = imb_factor
-        self.rand_number = rand_number
-        self.cls_num = cls_num
-
-        np.random.seed(self.rand_number)
-
-
-class Cifar10(datasets.GeneratorBasedBuilder):
-    """CIFAR-10 Dataset"""
-
-    BUILDER_CONFIGS = [
-        Cifar10LTConfig(
-            name="r-10",
-            description="CIFAR-10-LT-r-10 Dataset",
-            imb_type='exp',
-            imb_factor=1/10,
-            rand_number=0,
-            cls_num=10,
-        ),
-        Cifar10LTConfig(
-            name="r-20",
-            description="CIFAR-10-LT-r-20 Dataset",
-            imb_type='exp',
-            imb_factor=1/20,
-            rand_number=0,
-            cls_num=10,
-        ),
-        Cifar10LTConfig(
-            name="r-50",
-            description="CIFAR-10-LT-r-50 Dataset",
-            imb_type='exp',
-            imb_factor=1/50,
-            rand_number=0,
-            cls_num=10,
-        ),
-        Cifar10LTConfig(
-            name="r-100",
-            description="CIFAR-10-LT-r-100 Dataset",
-            imb_type='exp',
-            imb_factor=1/100,
-            rand_number=0,
-            cls_num=10,
-        ),
-        Cifar10LTConfig(
-            name="r-200",
-            description="CIFAR-10-LT-r-200 Dataset",
-            imb_type='exp',
-            imb_factor=1/200,
-            rand_number=0,
-            cls_num=10,
-        ),
-    ]
-
-    def _info(self) -> datasets.DatasetInfo:
-        return datasets.DatasetInfo(
-            description=_DESCRIPTION,
-            features=datasets.Features(
-                {
-                    "img": datasets.Image(),
-                    "label": datasets.features.ClassLabel(names=_NAMES),
-                }
-            ),
-            supervised_keys=None,  # Probably needs to be fixed.
-            homepage="https://www.cs.toronto.edu/~kriz/cifar.html",
-            citation=_CITATION,
-            task_templates=[ImageClassification(image_column="img", label_column="label")],
-        )
-
-    def _split_generators(self, dl_manager: datasets.DownloadManager) -> List[datasets.SplitGenerator]:
-        archive = dl_manager.download(_DATA_URL)
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"files": dl_manager.iter_archive(archive), "split": "train"}
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"files": dl_manager.iter_archive(archive), "split": "test"}
-            ),
-        ]
-    
-
-    def _generate_examples(self, files: Iterator[Tuple[str, BinaryIO]], split: str) -> Iterator[Dict]:
-        """This function returns the examples in the array form."""
-        if split == "train":
-            batches = ["data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5"]
-
-        if split == "test":
-            batches = ["test_batch"]
-        batches = [f"cifar-10-batches-py/{filename}" for filename in batches]
-
-        for path, fo in files:
-
-            if path in batches:
-                dict = pickle.load(fo, encoding="bytes")
-
-                labels = dict[b"labels"]
-                images = dict[b"data"]
-
-                if split == "train":
-                    indices = self._imbalance_indices()
-                else:
-                    indices = range(len(labels))
-
-                for idx in indices:
-
-                    img_reshaped = np.transpose(np.reshape(images[idx], (3, 32, 32)), (1, 2, 0))
-
-                    yield f"{path}_{idx}", {
-                        "img": img_reshaped,
-                        "label": labels[idx],
-                    }
-                break
-
-    def _generate_indices_targets(self, files: Iterator[Tuple[str, BinaryIO]], split: str) -> Iterator[Dict]:
-        """This function returns the examples in the array form."""
-
-        if split == "train":
-            batches = ["data_batch_1", "data_batch_2", "data_batch_3", "data_batch_4", "data_batch_5"]
-
-        if split == "test":
-            batches = ["test_batch"]
-        batches = [f"cifar-10-batches-py/{filename}" for filename in batches]
-
-        for path, fo in files:
-
-            if path in batches:
-                dict = pickle.load(fo, encoding="bytes")
-
-                labels = dict[b"labels"]
-
-                for idx, _ in enumerate(labels):
-                    yield f"{path}_{idx}", {
-                        "label": labels[idx],
-                    }
-                break
-
-    def _get_img_num_per_cls(self, data_length: int) -> List[int]:
-        """Get the number of images per class given the imbalance ratio and total number of images."""
-        img_max = data_length / self.config.cls_num
-        img_num_per_cls = []
-        if self.config.imb_type == 'exp':
-            for cls_idx in range(self.config.cls_num):
-                num = img_max * (self.config.imb_factor**(cls_idx / (self.config.cls_num - 1.0)))
-                img_num_per_cls.append(int(num))
-        elif self.config.imb_type == 'step':
-            for cls_idx in range(self.config.cls_num // 2):
-                img_num_per_cls.append(int(img_max))
-            for cls_idx in range(self.config.cls_num // 2):
-                img_num_per_cls.append(int(img_max * self.config.imb_factor))
-        else:
-            img_num_per_cls.extend([int(img_max)] * self.config.cls_num)
-        return img_num_per_cls
-
-    def _gen_imbalanced_data(self, img_num_per_cls: List[int], targets: List[int]) -> Tuple[List[int], Dict[int, int]]:
-        """This function returns the indices of imbalanced CIFAR-10-LT dataset and the number of images per class."""
-        new_indices = []
-        targets_np = np.array(targets, dtype=np.int64)
-        classes = np.unique(targets_np)
-        num_per_cls_dict = dict()
-        for the_class, the_img_num in zip(classes, img_num_per_cls):
-            num_per_cls_dict[the_class] = the_img_num
-            idx = np.where(targets_np == the_class)[0]
-            np.random.shuffle(idx)
-            selec_idx = idx[:the_img_num]
-            new_indices.extend(selec_idx.tolist())
-        return new_indices, num_per_cls_dict
-    
-    def _imbalance_indices(self) -> List[int]:
-        """This function returns the indices of imbalanced CIFAR-10-LT dataset."""
-        dl_manager = datasets.DownloadManager()
-        archive = dl_manager.download(_DATA_URL)
-        data_iterator = self._generate_indices_targets(dl_manager.iter_archive(archive), "train")
-
-        indices = []
-        targets = []
-        for i, targets_dict in data_iterator:
-            indices.append(i)
-            targets.append(targets_dict["label"])
-
-        data_length = len(indices)
-        img_num_per_cls = self._get_img_num_per_cls(data_length)
-        new_indices, _ = self._gen_imbalanced_data(img_num_per_cls, targets)
-        return new_indices
-
-def corrupted_labels(targets, r=0.4, noise_type='sym'):
-    transition = {0: 0, 2: 0, 4: 7, 7: 7, 1: 1, 9: 1, 3: 5, 5: 3, 6: 6, 8: 8}  # class transition for asymmetric noise
-    size = int(len(targets) * r)
+def corrupted_labels(targets, r = 0.4, noise_type='sym'):
+    transition = {0: 0, 2: 0, 4: 7, 7: 7, 1: 1, 9: 1, 3: 5, 5: 3, 6: 6,
+                       8: 8}  # class transition for asymmetric noise
+    size = int(len(targets)*r)
     idx = list(range(len(targets)))
     random.shuffle(idx)
     noise_idx = idx[:size]
@@ -245,12 +23,14 @@ def corrupted_labels(targets, r=0.4, noise_type='sym'):
     for i in range(len(targets)):
         if i in noise_idx:
             if noise_type == 'sym':
-                noisy_label.append(random.randint(0, 9))
+                noisy_label.append(random.randint(0,9))
             elif noise_type == 'asym':
                 noisy_label.append(transition[targets[i]])
         else:
             noisy_label.append(targets[i])
-    return np.array(noisy_label)
+    x = np.array(noisy_label)
+    return x
+
 
 class CIFAR10N(CIFAR10):
     """CIFAR10 Dataset.
@@ -268,26 +48,85 @@ class CIFAR10N(CIFAR10):
         im_1 = self.transform(img)
 
         return im_1, target, true_target, index
-      
-class CIFAR10N_imb(Cifar10):
-    """CIFAR-10 Dataset with noise and imbalance."""
-    
-    def __init__(self, root, transform, noise_type, r, imb_type='exp', imb_factor=0.1, rand_number=0):
-        super(CIFAR10N_imb, self).__init__()
+
+class Cifar10Imbanlance(Dataset):
+    def __init__(self, imbanlance_rate, num_cls=10, file_path="data/",
+                 train=True, transform=None, label_align=True, ):
         self.transform = transform
+        self.label_align = label_align
+        assert 0.0 < imbanlance_rate < 1, "imbanlance_rate must 0.0 < imbanlance_rate < 1"
+        self.imbanlance_rate = imbanlance_rate
 
-        self.config = Cifar10LTConfig(imb_type=imb_type, imb_factor=imb_factor, rand_number=rand_number)
-        img_num_per_cls = self._get_img_num_per_cls(len(self.targets))
-        self.imbalance_indices, _ = self._gen_imbalanced_data(img_num_per_cls, self.targets)
-        
-        imbalance_targets = [self.targets[i] for i in self.imbalance_indices]
-        self.noise_targets = corrupted_labels(imbalance_targets, r, noise_type)
+        self.num_cls = num_cls
+        self.data = self.produce_imbanlance_data(file_path=file_path, train=train,imbanlance_rate=self.imbanlance_rate)
+        self.x = self.data['x']
+        self.targets = self.data['y'].tolist()
+        self.y = self.data['y'].tolist()
 
-        self.data = [self.data[i] for i in self.imbalance_indices]
-        self.targets = imbalance_targets
+    def __len__(self):
+        return len(self.x)
 
-    def __getitem__(self, index):
-        img, target, true_target = self.data[index], self.noise_targets[index], self.targets[index]
-        img = Image.fromarray(img)
-        im_1 = self.transform(img)
-        return im_1, target, true_target, index
+    def __getitem__(self, item):
+        x, y = self.x[item], self.y[item]
+        x = Image.fromarray(x)
+        if self.transform is not None:
+            x = self.transform(x)
+        return x, y
+
+    def get_per_class_num(self):
+        return self.class_list
+
+    def produce_imbanlance_data(self, imbanlance_rate, file_path="/data", train=True):
+
+        train_data = torchvision.datasets.CIFAR10(
+            root=file_path,
+            train=train,
+            download=True,
+        )
+        x_train = train_data.data
+        y_train = train_data.targets
+        y_train = np.array(y_train)
+
+        rehearsal_data = None
+        rehearsal_label = None
+
+        data_percent = []
+        data_num = int(x_train.shape[0] / self.num_cls)
+
+        for cls_idx in range(self.num_cls):
+            if train:
+                num = data_num * (imbanlance_rate ** (cls_idx / (self.num_cls - 1)))
+                data_percent.append(int(num))
+            else:
+                num = data_num
+                data_percent.append(int(num))
+        if train:
+            print("imbanlance_ration is {}".format(data_percent[0] / data_percent[-1]))
+            print("per class num: {}".format(data_percent))
+
+        self.class_list = data_percent
+
+
+
+        for i in range(1, self.num_cls + 1):
+            a1 = y_train >= i - 1
+            a2 = y_train < i
+            index = a1 & a2
+            task_train_x = x_train[index]
+            label = y_train[index]
+            data_num = task_train_x.shape[0]
+            index = np.random.choice(data_num, data_percent[i - 1],replace=False)
+            tem_data = task_train_x[index]
+            tem_label = label[index]
+            if rehearsal_data is None:
+                rehearsal_data = tem_data
+                rehearsal_label = tem_label
+            else:
+                rehearsal_data = np.concatenate([rehearsal_data, tem_data], axis=0)
+                rehearsal_label = np.concatenate([rehearsal_label, tem_label], axis=0)
+
+        task_split = {
+            "x": rehearsal_data,
+            "y": rehearsal_label,
+        }
+        return task_split
