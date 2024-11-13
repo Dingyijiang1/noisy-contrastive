@@ -339,10 +339,16 @@ def main():
         if args.linear_probing:
             for param in model.parameters():
                 param.requires_grad = False
+                
         if args.MLP == '1':
             model.linear = MLP_1()
         else:
             model.linear = MLP_3()
+        
+        optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
+          lr=args.lr,
+          momentum=args.momentum,
+          weight_decay=args.weight_decay)
           
     for epoch in range(start_epoch, args.epochs):
         epoch_optim = epoch
