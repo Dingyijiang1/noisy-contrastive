@@ -333,7 +333,9 @@ def main():
     best_acc = 0.0
 
     if args.finetune or args.linear_probing:
-        model.load(args.model_path)
+        checkpoint = torch.load(args.model_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         if args.linear_probing:
             for param in model.parameters():
                 param.requires_grad = False
