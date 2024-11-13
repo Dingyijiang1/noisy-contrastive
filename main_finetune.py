@@ -91,7 +91,7 @@ def set_model(args):
 
 class MLP_1(nn.Module):
     def __init__(self, nb_classes=10, feat=512):
-        super(MLP, self).__init__()
+        super(MLP_1, self).__init__()
         self.layer1 = nn.Linear(feat, 256)
         self.layer2 = nn.Linear(256, nb_classes)
 
@@ -102,7 +102,7 @@ class MLP_1(nn.Module):
 
 class MLP_3(nn.Module):
     def __init__(self, nb_classes=10, feat=512):
-        super(MLP, self).__init__()
+        super(MLP_3, self).__init__()
         self.layer1 = nn.Linear(feat, 512)
         self.layer2 = nn.Linear(512, 256)
         self.layer3 = nn.Linear(256, 128)
