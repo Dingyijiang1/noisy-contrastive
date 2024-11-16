@@ -316,16 +316,14 @@ def main():
 
     model = set_model(args)
 
-    optimizer = optim.SGD(model.parameters(),
-                          lr=args.lr,
-                          momentum=args.momentum,
-                          weight_decay=args.weight_decay)
-
+    optimizer = optim.SGD(model.parameters(),  # Update all parameters
+                            lr=args.lr,
+                            momentum=args.momentum,
+                             weight_decay=args.weight_decay)
 
     if args.gpu is not None:
         torch.cuda.set_device(args.gpu)
         cudnn.benchmark = True
-
     start_epoch = 0
 
 
@@ -335,20 +333,22 @@ def main():
     if args.finetune or args.linear_probing:
         checkpoint = torch.load(args.model_path)
         model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        if args.linear_probing:
-            for param in model.parameters():
-                param.requires_grad = False
-                
         if args.MLP == '1':
             model.linear = MLP_1()
         else:
             model.linear = MLP_3()
-        
-        optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, model.parameters()),
-          lr=args.lr,
-          momentum=args.momentum,
-          weight_decay=args.weight_decay)
+
+    if args.linear_probing:
+        for name, param in model.named_parameters():
+            if "linear" not in name:
+                param.requires_grad = False
+
+        linear_params = [param for name, param in model.named_parameters() if "linear" in name]
+
+        optimizer = optim.SGD(linear_params,
+                      lr=args.lr,
+                      momentum=args.momentum,
+                      weight_decay=args.weight_decay)
           
     for epoch in range(start_epoch, args.epochs):
         epoch_optim = epoch
