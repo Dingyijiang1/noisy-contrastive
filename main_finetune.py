@@ -16,7 +16,7 @@ import torch.nn as nn
 from simsiam.model_factory import SimSiam
 
 
-from loader_LT import Cifar10Imbanlance, CIFAR10N，Cifar10NoisyImbanlance
+from loader_LT import Cifar10Imbanlance, CIFAR10N, Cifar10NoisyImbanlance
 from utils import adjust_learning_rate, AverageMeter, ProgressMeter, save_checkpoint, accuracy, load_checkpoint, ThreeCropsTransform
 
 parser = argparse.ArgumentParser('arguments for training')
