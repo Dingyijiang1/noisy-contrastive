@@ -16,7 +16,7 @@ import torch.nn as nn
 from simsiam.model_factory import SimSiam
 
 
-from loader_LT import Cifar10Imbanlance, CIFAR10N
+from loader_LT import Cifar10Imbanlance, CIFAR10N，Cifar10NoisyImbanlance
 from utils import adjust_learning_rate, AverageMeter, ProgressMeter, save_checkpoint, accuracy, load_checkpoint, ThreeCropsTransform
 
 parser = argparse.ArgumentParser('arguments for training')
@@ -28,8 +28,10 @@ parser.add_argument('--r', type=float, default=0.8, help='noise level')
 parser.add_argument('--trial', type=str, default='1', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 parser.add_argument('--imb', default=False, type=bool, help='imbalance or not')
+parser.add_argument('--imb', default=False, type=bool, help='imbalance or not')
 parser.add_argument('--imbanlance_rate', default='0.1', type=float, help='imbalance rate')
 
+parser.add_argument('--nni', default=False, type=bool, help='noisy and imb')
 parser.add_argument('--finetune', default=False, type=bool, help='MLP Layers')
 parser.add_argument('--model_path', default='./checkpoint', type=str, help='existing model')
 parser.add_argument('--linear_probing', default=False, type=int, help='MLP Layers')
@@ -143,6 +145,13 @@ def set_loader(args):
                                  transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
                                  imbanlance_rate = args.imbanlance_rate,
                                  )
+        elif args.nni:
+            train_set = Cifar10Imbanlance(file_path=args.data_root,
+                                 transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
+                                 imbanlance_rate = args.imbanlance_rate,
+                                 noise_type=args.noise_type,
+                                 r=args.r
+                                )
         else: 
             train_set = CIFAR10N(root=args.data_root,
                              transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
