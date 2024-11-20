@@ -50,7 +50,7 @@ class CIFAR10N(CIFAR10):
         return im_1, target, true_target, index
 
 class Cifar10NoisyImbanlance(Dataset):
-    def __init__(self, imbanlance_rate, num_cls=10, file_path="data/", noise_type, r,
+    def __init__(self, imbanlance_rate, num_cls=10, file_path="data/", noise_type="sym", r="0.6",
                  train=True, transform=None, label_align=True, ):
         self.transform = transform
         self.label_align = label_align
