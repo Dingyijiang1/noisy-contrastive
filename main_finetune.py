@@ -28,7 +28,6 @@ parser.add_argument('--r', type=float, default=0.8, help='noise level')
 parser.add_argument('--trial', type=str, default='1', help='trial id')
 parser.add_argument('--img_dim', default=32, type=int)
 parser.add_argument('--imb', default=False, type=bool, help='imbalance or not')
-parser.add_argument('--imb', default=False, type=bool, help='imbalance or not')
 parser.add_argument('--imbanlance_rate', default='0.1', type=float, help='imbalance rate')
 
 parser.add_argument('--nni', default=False, type=bool, help='noisy and imb')
