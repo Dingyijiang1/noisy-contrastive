@@ -146,7 +146,7 @@ def set_loader(args):
                                  imbanlance_rate = args.imbanlance_rate,
                                  )
         elif args.nni:
-            train_set = Cifar10Imbanlance(file_path=args.data_root,
+            train_set = Cifar10NoisyImbanlance(file_path=args.data_root,
                                  transform=ThreeCropsTransform(train_transforms, train_cls_transformcon),
                                  imbanlance_rate = args.imbanlance_rate,
                                  noise_type=args.noise_type,
